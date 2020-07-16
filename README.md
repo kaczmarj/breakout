@@ -11,7 +11,7 @@ The popular game _Breakout_ implemented in Go and played in a terminal.
   - Run `./breakout -help` to see available options.
 1. Press <kbd>Enter</kbd>
 1. Move the platform with <kbd>←</kbd> and <kbd>→</kbd>.
-1. Press <kbd>esc</kbd> to exit the game.
+1. Press <kbd>Esc</kbd> to exit the game.
 
 ## Building
 
