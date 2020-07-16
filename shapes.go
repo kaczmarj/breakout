@@ -71,9 +71,8 @@ type Bar struct {
 	step int
 }
 
-func NewBar(s tcell.Screen, step int) *Bar {
+func NewBar(s tcell.Screen, w, step int) *Bar {
 	sx, sy := s.Size()
-	w := 10
 	h := 1
 	x := sx/2 - (w / 2)
 	y := sy - 5
@@ -140,7 +139,7 @@ func (d DestructibleGrid) AllDestroyed() bool {
 	return true
 }
 
-func gridOfDestructibleRectangles(r, c int, w, h int, marginx, marginy int, s tcell.Screen) (DestructibleGrid, error) {
+func NewDestructibleGrid(r, c int, w, h int, marginx, marginy int, s tcell.Screen) (DestructibleGrid, error) {
 	var err error = nil
 
 	gridWidth := c * (w + marginx)
@@ -155,7 +154,7 @@ func gridOfDestructibleRectangles(r, c int, w, h int, marginx, marginy int, s tc
 	x := sx/2 - (gridWidth / 2)
 	y := 0
 
-	colors := [5][3]int32{{128, 128, 0}, {255, 0, 255}, {255, 128, 0}, {0, 153, 153}, {255, 102, 0}}
+	colors := [5][3]int32{{46, 134, 171}, {162, 59, 114}, {241, 143, 1}, {199, 62, 29}, {59, 31, 43}}
 
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	grid := make([][]*DestructibleRectangle, c)
