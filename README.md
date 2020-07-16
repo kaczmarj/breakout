@@ -2,6 +2,8 @@
 
 The popular game _Breakout_ implemented in Go and played in a terminal.
 
+![Screenshot of Breakout](demo.png)
+
 ## How to play
 
 1. Grab a pre-compiled binary from the releases, or build the executable from source.
