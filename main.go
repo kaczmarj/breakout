@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/gdamore/tcell"
 	"log"
 	"math"
@@ -11,12 +12,23 @@ import (
 
 // TODO: use channels to communicate left/right from the key loop.
 // TODO: use channels to implement pause function.
+// TODO: use channels to start game. Put the Enter key in the key event loop.
 
 var defaultStyle = tcell.StyleDefault.Background(tcell.NewRGBColor(0, 0, 0))
 
 const refreshRate = time.Second / 30
 
 func main() {
+
+	platformWidth := flag.Int("platform-width", 16, "width of platform")
+	platformStep := flag.Int("platform-step", 6, "number of characters platform shifts per move")
+	speed := flag.Float64("speed", 1, "speed of projectile")
+	rows := flag.Int("rows", 6, "rows in grid of breakable blocks")
+	cols := flag.Int("cols", 20, "columns in grid of breakable blocks")
+	blockWidth := flag.Int("block-width", 4, "width of each breakable block")
+	blockHeight := flag.Int("block-height", 1, "height of each breakable block")
+	flag.Parse()
+
 	screen, err := tcell.NewScreen()
 	if err != nil {
 		log.Fatal(err)
@@ -28,20 +40,21 @@ func main() {
 	screen.SetStyle(defaultStyle)
 	screen.Clear()
 
-	mainLoop(screen)
+	// rows, cols
+	mainLoop(screen, *platformWidth, *platformStep, *speed, *rows, *cols, *blockWidth, *blockHeight)
 
 }
 
-func mainLoop(screen tcell.Screen) {
+func mainLoop(screen tcell.Screen, platformWidth, platformStep int, speed float64, rows, cols, blockWidth, blockHeight int) {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	directions := []float64{math.Pi / 4, 3 * math.Pi / 4}
 	direction := directions[rng.Intn(len(directions))]
-	projectile := NewProjectile(screen, Vector2D{direction: direction, magnitude: 1})
-	bar := NewBar(screen, 4)
+	projectile := NewProjectile(screen, Vector2D{direction: direction, magnitude: speed})
+	bar := NewBar(screen, platformWidth, platformStep)
 
 	go keyEventLoop(bar, screen)
 
-	grid, err := gridOfDestructibleRectangles(6, 20, 4, 1, 0, 0, screen)
+	grid, err := NewDestructibleGrid(rows, cols, 4, 1, 1, 0, screen)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,8 +63,25 @@ func mainLoop(screen tcell.Screen) {
 			block.Draw()
 		}
 	}
+	projectile.Draw()
+	bar.Draw()
+
+	sx, sy := screen.Size()
+	style := defaultStyle.Foreground(tcell.NewRGBColor(162, 59, 114))
+	// Write instructions.
+	instructions := "Press enter to begin."
+	x0 := sx/2 - (len(instructions) / 2)
+	y0 := sy / 2
+	for i, ch := range []rune(instructions) {
+		screen.SetContent(x0+i, y0, ch, nil, style)
+	}
+	quitInstructions := "Press escape to quit."
+	for i, ch := range []rune(quitInstructions) {
+		screen.SetContent(x0+i, y0+1, ch, nil, style)
+	}
 	screen.Show()
 
+	// Wait for user input.
 	ready := false
 	for !ready {
 		event := screen.PollEvent() // This blocks.
@@ -62,6 +92,14 @@ func mainLoop(screen tcell.Screen) {
 				ready = true
 			}
 		}
+	}
+
+	// Remove instructions.
+	for i, _ := range []rune(instructions) {
+		screen.SetContent(x0+i, y0, ' ', nil, defaultStyle)
+	}
+	for i, _ := range []rune(quitInstructions) {
+		screen.SetContent(x0+i, y0+1, ' ', nil, style)
 	}
 
 	finished := false
@@ -101,7 +139,7 @@ func mainLoop(screen tcell.Screen) {
 		print("LOSER")
 	}
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 3)
 
 }
 
